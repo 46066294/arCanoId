@@ -17,6 +17,9 @@ class mainState extends Phaser.State {
     private ACCELERATION:number = 100000; // pixels/second/second
     private DRAG:number = 10000;
     private cursor:Phaser.CursorKeys;
+    private ballLose = false;
+    private win = false;
+    private score = 0;
 
     preload():void {
         super.preload();
@@ -36,7 +39,7 @@ class mainState extends Phaser.State {
 
     create():void {
         super.create();
-
+        this.physics.arcade.checkCollision.down = false;
         this.createBackground();
         this.createPaddle();
         this.createBall();
@@ -70,14 +73,36 @@ class mainState extends Phaser.State {
 
         this.ballBlue.anchor.setTo(0.5, 1.8);
         //this.ballBlue.scale.setTo(0.5, 0.5);
-        this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
+        //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
+        this.physics.enable(this.ballBlue);
+        this.ballBlue.body.collideWorldBounds = true;
+        this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED);
+        this.ballBlue.body.velocity.x = 200;
+        this.ballBlue.body.velocity.y = 200;
 
         this.ballBlue.body.gr
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
-        this.ballBlue.body.collideWorldBounds = true;
         this.ballBlue.body.bounce.setTo(0.5);
-        this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
+        //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
+        this.ballBlue.events.onOutOfBounds.add(this.lose, this);
+        this.ballBlue.checkWorldBounds = true;
+        this.ballBlue.events.onOutOfBounds.add(this.lose, this);
     };
+
+    private lose(ballBlue:Phaser.Sprite){
+
+        this.ballLose = true;
+
+        ballBlue.kill();
+
+        this.input.onTap.addOnce(this.restartGame, this);
+    }
+
+    private restartGame(){
+        this.game.state.restart();
+        this.score = 0;
+        this.ballLose = false;
+    }
 
 
 
