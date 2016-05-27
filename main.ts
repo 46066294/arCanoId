@@ -21,12 +21,15 @@ class mainState extends Phaser.State {
     private textScore:Phaser.Text;
     // Sonidos
     soundBreakBrick;
+    marioOver;
+
+    //explosion
+    explosions:Phaser.Group;
 
 
 
     preload():void {
         super.preload();
-
 
         this.load.image('paddleBlu', 'items/png/paddleBlu.png');
         this.load.image('ballBlue', 'items/png/ballBlue.png');
@@ -36,13 +39,57 @@ class mainState extends Phaser.State {
         this.load.image('element_grey_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('background', 'assets/background800x600.jpg');
 
+        // Importamos las imagenes
+        //this.load.atlasJSONHash('sprites', 'assets/Bomb_explosion.png', 'assets/sprites.json');
+
+        this.load.image('explosions', 'assets/Bomb_explosion.png');
+
         //sonido
         this.load.audio('soundBreak', 'sounds/Mirror Breaking-SoundBible.com-73239746.wav');
+        this.load.audio('mariover', 'sounds/smb_gameover.wav');
+
 
         //MOTOR DE FISICAS
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
     }
+
+    private createExplosions() {
+
+        this.explosions = this.add.group();
+        this.explosions.createMultiple(20, 'sprites', 'Bomb_explosion');
+
+        this.explosions.setAll('anchor.x', 0.5);
+        this.explosions.setAll('anchor.y', 0.5);
+
+        this.explosions.forEach((explosion:Phaser.Sprite) => {
+            explosion.loadTexture('sprites', 'Bomb_explosion');
+        }, this);
+    };
+
+    explosion(x:number, y:number):void {
+
+        var explosion:Phaser.Sprite = this.explosions.getFirstDead();
+        explosion.reset(
+            x - 6,
+            y - 24
+        );
+        explosion.alpha = 0.6;
+        explosion.scale.setTo(this.rnd.realInRange(0.5, 5));
+
+        this.add.tween(explosion.scale).to({
+            x: 0,
+            y: 0
+        }, 350).start();
+
+        var tween = this.add.tween(explosion).to({alpha: 0}, 500);
+
+        tween.onComplete.add(() => {
+            explosion.kill();
+        });
+
+        tween.start();
+    };
 
     create():void {
         super.create();
@@ -52,8 +99,12 @@ class mainState extends Phaser.State {
         this.createBall();
         this.buildBricks();
 
+        //animacio
+        this.createExplosions();
+
         //sonido
         this.soundBreakBrick = this.game.add.audio('soundBreak');
+        this.marioOver = this.game.add.audio('mariover');
 
         //PUNTUACIO
         this.textScore = this.add.text(0, 0, 'Score: ' + this.score + '                mArcanoid v1.0',
@@ -93,7 +144,7 @@ class mainState extends Phaser.State {
         //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
         this.physics.enable(this.ballBlue);
         this.ballBlue.body.collideWorldBounds = true;
-        this.ballBlue.body.velocity.x = 200;
+        this.ballBlue.body.velocity.x = 150;
         this.ballBlue.body.velocity.y = 200;
 
         //this.ballBlue.body.gr
@@ -108,7 +159,7 @@ class mainState extends Phaser.State {
     private buildBricks(){
 
         var brickColumn = 13;
-        var brickRaw = 10;
+        var brickRaw = 6;
         var anchuraLadrillo = 60;
         var alturaLadrillo = 28;
         this.bricks = this.add.group();
@@ -138,6 +189,9 @@ class mainState extends Phaser.State {
 
     private partidaPerdida(ballBlue:Phaser.Sprite){
 
+        //sonido
+        this.marioOver.play();
+
         this.ballLose = true;
         ballBlue.kill();
         this.input.onTap.addOnce(this.restartGame, this);
@@ -160,6 +214,10 @@ class mainState extends Phaser.State {
         this.soundBreakBrick.play();
         //this.soundBreakBrick.stop();
 
+        //explosion
+        this.explosion(brick.x, brick.y);
+
+        //score
         this.textScore.setText("Score: " + this.score);
 
     }

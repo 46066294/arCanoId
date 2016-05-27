@@ -27,11 +27,41 @@ var mainState = (function (_super) {
         this.load.image('element_green_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('element_grey_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('background', 'assets/background800x600.jpg');
+        // Importamos las imagenes
+        //this.load.atlasJSONHash('sprites', 'assets/Bomb_explosion.png', 'assets/sprites.json');
+        this.load.image('explosions', 'assets/Bomb_explosion.png');
         //sonido
         this.load.audio('soundBreak', 'sounds/Mirror Breaking-SoundBible.com-73239746.wav');
+        this.load.audio('mariover', 'sounds/smb_gameover.wav');
         //MOTOR DE FISICAS
         this.physics.startSystem(Phaser.Physics.ARCADE);
     };
+    mainState.prototype.createExplosions = function () {
+        this.explosions = this.add.group();
+        this.explosions.createMultiple(20, 'sprites', 'Bomb_explosion');
+        this.explosions.setAll('anchor.x', 0.5);
+        this.explosions.setAll('anchor.y', 0.5);
+        this.explosions.forEach(function (explosion) {
+            explosion.loadTexture('sprites', 'Bomb_explosion');
+        }, this);
+    };
+    ;
+    mainState.prototype.explosion = function (x, y) {
+        var explosion = this.explosions.getFirstDead();
+        explosion.reset(x - 6, y - 24);
+        explosion.alpha = 0.6;
+        explosion.scale.setTo(this.rnd.realInRange(0.5, 5));
+        this.add.tween(explosion.scale).to({
+            x: 0,
+            y: 0
+        }, 350).start();
+        var tween = this.add.tween(explosion).to({ alpha: 0 }, 500);
+        tween.onComplete.add(function () {
+            explosion.kill();
+        });
+        tween.start();
+    };
+    ;
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
         this.physics.arcade.checkCollision.down = false;
@@ -39,8 +69,11 @@ var mainState = (function (_super) {
         this.createPaddle();
         this.createBall();
         this.buildBricks();
+        //animacio
+        this.createExplosions();
         //sonido
         this.soundBreakBrick = this.game.add.audio('soundBreak');
+        this.marioOver = this.game.add.audio('mariover');
         //PUNTUACIO
         this.textScore = this.add.text(0, 0, 'Score: ' + this.score + '                mArcanoid v1.0', { font: "30px Arial", fill: "#ff0000" });
         this.textScore.fixedToCamera = true;
@@ -73,7 +106,7 @@ var mainState = (function (_super) {
         //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
         this.physics.enable(this.ballBlue);
         this.ballBlue.body.collideWorldBounds = true;
-        this.ballBlue.body.velocity.x = 200;
+        this.ballBlue.body.velocity.x = 150;
         this.ballBlue.body.velocity.y = 200;
         //this.ballBlue.body.gr
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
@@ -85,7 +118,7 @@ var mainState = (function (_super) {
     ;
     mainState.prototype.buildBricks = function () {
         var brickColumn = 13;
-        var brickRaw = 10;
+        var brickRaw = 6;
         var anchuraLadrillo = 60;
         var alturaLadrillo = 28;
         this.bricks = this.add.group();
@@ -106,6 +139,8 @@ var mainState = (function (_super) {
         }
     };
     mainState.prototype.partidaPerdida = function (ballBlue) {
+        //sonido
+        this.marioOver.play();
         this.ballLose = true;
         ballBlue.kill();
         this.input.onTap.addOnce(this.restartGame, this);
@@ -122,6 +157,9 @@ var mainState = (function (_super) {
         //sonido
         this.soundBreakBrick.play();
         //this.soundBreakBrick.stop();
+        //explosion
+        this.explosion(brick.x, brick.y);
+        //score
         this.textScore.setText("Score: " + this.score);
     };
     mainState.prototype.ballHitPaddle = function (ballBlue, paddleBlu) {
