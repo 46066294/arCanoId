@@ -5,28 +5,27 @@ import Physics = Phaser.Physics;
 class mainState extends Phaser.State {
     game: Phaser.Game;
 
-    //private walls:Phaser.TilemapLayer;
+    //VARIABLES
     private background800x600:Phaser.Sprite;
-    private paddleRed:Phaser.Sprite;
     private paddleBlu:Phaser.Sprite;
     private ballBlue:Phaser.Sprite;
-    //private grav:Physics.ARCADE:number = 1;
     private bricks:Phaser.Group;
-    private PADDLE_SIZE = 75;
-    private MAX_SPEED:number = 800;
-    private ACCELERATION:number = 1000; // pixels/second/second
+    private MAX_SPEED:number = 650;
+    private ACCELERATION:number = 500; // pixels/second/second
     private DRAG:number = 10000;
     private cursor:Phaser.CursorKeys;
     private ballLose = false;
     private win = false;
-    private lose = false;
+    private lose:Phaser.Text;
     private score = 0;
     private textScore:Phaser.Text;
+
+
 
     preload():void {
         super.preload();
 
-        //this.load.image('paddleRed', 'items/png/paddleRed.png');
+
         this.load.image('paddleBlu', 'items/png/paddleBlu.png');
         this.load.image('ballBlue', 'items/png/ballBlue.png');
         this.load.image('element_blue_rectangle', 'items/png/element_blue_rectangle.png');
@@ -35,6 +34,7 @@ class mainState extends Phaser.State {
         this.load.image('element_grey_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('background', 'assets/background800x600.jpg');
 
+        //MOTOR DE FISICAS
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
     }
@@ -47,6 +47,11 @@ class mainState extends Phaser.State {
         this.createBall();
         this.buildBricks();
 
+        //PUNTUACIO
+        this.textScore = this.add.text(0, 0, 'Score: ' + this.score + '                mArcanoid v1.0',
+            {font: "30px Arial", fill: "#ff0000"});
+        this.textScore.fixedToCamera = true;
+
     }
 
     private createBackground() {
@@ -56,7 +61,7 @@ class mainState extends Phaser.State {
     };
 
     private createPaddle() {
-        //this.paddleRed = this.add.sprite(this.world.centerX, this.world.centerY, 'paddleRed');
+
         this.paddleBlu = this.add.sprite(this.world.centerX, 550, 'paddleBlu');
         this.paddleBlu.anchor.setTo(0.5, 0.5);
         this.paddleBlu.scale.setTo(0.8, 0.8);
@@ -64,7 +69,7 @@ class mainState extends Phaser.State {
         this.cursor = this.input.keyboard.createCursorKeys();
         this.paddleBlu.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
         this.paddleBlu.body.collideWorldBounds = true;
-        this.paddleBlu.body.bounce.setTo(0.5);
+        this.paddleBlu.body.bounce.setTo(0);
         this.paddleBlu.body.drag.setTo(this.DRAG, this.DRAG); // x, y
 
     };
@@ -75,7 +80,7 @@ class mainState extends Phaser.State {
         //var scale = this.world.height / this.ballBlue.height;
         //this.ballBlue.scale.setTo(scale, scale);
 
-        this.ballBlue.anchor.setTo(0.5, 1.8);
+        this.ballBlue.anchor.setTo(0.5, 8);
         //this.ballBlue.scale.setTo(0.5, 0.5);
         //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
         this.physics.enable(this.ballBlue);
@@ -85,7 +90,7 @@ class mainState extends Phaser.State {
 
         //this.ballBlue.body.gr
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
-        this.ballBlue.body.bounce.setTo(1.5);
+        this.ballBlue.body.bounce.setTo(2);
         //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
         this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
         this.ballBlue.checkWorldBounds = true;
@@ -128,6 +133,9 @@ class mainState extends Phaser.State {
         this.ballLose = true;
         ballBlue.kill();
         this.input.onTap.addOnce(this.restartGame, this);
+
+        this.lose = this.add.text(this.world.centerX-100, this.world.centerY,  'GAME OVER',
+            {font: "30px Arial", fill: "#fff000"});
     }
 
     private restartGame(){
@@ -136,9 +144,10 @@ class mainState extends Phaser.State {
         this.ballLose = false;
     }
 
-    private ballBreaksBrick(pelota:Phaser.Sprite, ladrillo:Phaser.Sprite) {
-        ladrillo.kill();
-        this.score = this.score++;
+    private ballBreaksBrick(ballBlue:Phaser.Sprite, brick:Phaser.Sprite) {
+        brick.kill();
+        this.score = this.score+100;
+
 
         this.textScore.setText("Score: " + this.score);
 
@@ -161,22 +170,11 @@ class mainState extends Phaser.State {
             this.paddleBlu.body.acceleration.x = 0;
         }
 
-        ////////////////////////////////////////////////////////////
-        //collide
-        //this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
-        this.physics.arcade.collide(this.paddleBlu, this.ballBlue);
-        this.physics.arcade.overlap(null, this.bricks, null, null, this);
+        //collide:   http://phaser.io/docs/2.4.4/Phaser.Physics.Arcade.html#collide
+        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
         this.physics.arcade.collide(this.ballBlue, this.bricks, this.ballBreaksBrick, null, this);
 
-
-        if (this.cursor.left.isDown) {
-            this.paddleBlu.body.acceleration.x = -this.ACCELERATION;
-        } else if (this.cursor.right.isDown) {
-            this.paddleBlu.body.acceleration.x = this.ACCELERATION / 2;
-        }
-
         this.paddleBlu.position.x = this.game.input.x;
-        ////////////////////////////////////////////////////////////
     }
 }//end mainState class
 
