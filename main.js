@@ -13,7 +13,7 @@ var mainState = (function (_super) {
         _super.apply(this, arguments);
         this.PADDLE_SIZE = 75;
         this.MAX_SPEED = 800;
-        this.ACCELERATION = 100000; // pixels/second/second
+        this.ACCELERATION = 1000; // pixels/second/second
         this.DRAG = 10000;
         this.ballLose = false;
         this.win = false;
@@ -61,6 +61,7 @@ var mainState = (function (_super) {
     ;
     mainState.prototype.createBall = function () {
         this.ballBlue = this.add.sprite(this.world.centerX, 550, 'ballBlue');
+        //this.ballBlue.position = (new Point(this.world.centerX, this.world.centerY));
         //var scale = this.world.height / this.ballBlue.height;
         //this.ballBlue.scale.setTo(scale, scale);
         this.ballBlue.anchor.setTo(0.5, 1.8);
@@ -68,16 +69,14 @@ var mainState = (function (_super) {
         //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
         this.physics.enable(this.ballBlue);
         this.ballBlue.body.collideWorldBounds = true;
-        this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED);
         this.ballBlue.body.velocity.x = 200;
         this.ballBlue.body.velocity.y = 200;
-        this.ballBlue.body.gr;
+        //this.ballBlue.body.gr
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
-        this.ballBlue.body.bounce.setTo(0.5);
+        this.ballBlue.body.bounce.setTo(1.5);
         //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
         this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
         this.ballBlue.checkWorldBounds = true;
-        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
     };
     ;
     mainState.prototype.buildBricks = function () {
@@ -132,7 +131,8 @@ var mainState = (function (_super) {
         }
         ////////////////////////////////////////////////////////////
         //collide
-        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        //this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        this.physics.arcade.collide(this.paddleBlu, this.ballBlue);
         this.physics.arcade.overlap(null, this.bricks, null, null, this);
         this.physics.arcade.collide(this.ballBlue, this.bricks, this.ballBreaksBrick, null, this);
         if (this.cursor.left.isDown) {

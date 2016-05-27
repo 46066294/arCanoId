@@ -14,7 +14,7 @@ class mainState extends Phaser.State {
     private bricks:Phaser.Group;
     private PADDLE_SIZE = 75;
     private MAX_SPEED:number = 800;
-    private ACCELERATION:number = 100000; // pixels/second/second
+    private ACCELERATION:number = 1000; // pixels/second/second
     private DRAG:number = 10000;
     private cursor:Phaser.CursorKeys;
     private ballLose = false;
@@ -71,6 +71,7 @@ class mainState extends Phaser.State {
 
     private createBall() {
         this.ballBlue = this.add.sprite(this.world.centerX, 550, 'ballBlue');
+        //this.ballBlue.position = (new Point(this.world.centerX, this.world.centerY));
         //var scale = this.world.height / this.ballBlue.height;
         //this.ballBlue.scale.setTo(scale, scale);
 
@@ -79,17 +80,16 @@ class mainState extends Phaser.State {
         //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
         this.physics.enable(this.ballBlue);
         this.ballBlue.body.collideWorldBounds = true;
-        this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED);
         this.ballBlue.body.velocity.x = 200;
         this.ballBlue.body.velocity.y = 200;
 
-        this.ballBlue.body.gr
+        //this.ballBlue.body.gr
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
-        this.ballBlue.body.bounce.setTo(0.5);
+        this.ballBlue.body.bounce.setTo(1.5);
         //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
         this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
         this.ballBlue.checkWorldBounds = true;
-        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
+
     };
 
     private buildBricks(){
@@ -126,9 +126,7 @@ class mainState extends Phaser.State {
     private partidaPerdida(ballBlue:Phaser.Sprite){
 
         this.ballLose = true;
-
         ballBlue.kill();
-
         this.input.onTap.addOnce(this.restartGame, this);
     }
 
@@ -147,12 +145,14 @@ class mainState extends Phaser.State {
     }
 
 
+
     update():void {
         super.update();
 
         if(this.cursor.left.isDown){
             //this.ufo.x -= 5;
             this.paddleBlu.body.acceleration.x = -this.ACCELERATION;
+            //ballBlue.body.moveLeft(200);
         } else if(this.cursor.right.isDown){
             //this.ufo.x += 5;
             this.paddleBlu.body.acceleration.x = this.ACCELERATION;
@@ -163,7 +163,8 @@ class mainState extends Phaser.State {
 
         ////////////////////////////////////////////////////////////
         //collide
-        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        //this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        this.physics.arcade.collide(this.paddleBlu, this.ballBlue);
         this.physics.arcade.overlap(null, this.bricks, null, null, this);
         this.physics.arcade.collide(this.ballBlue, this.bricks, this.ballBreaksBrick, null, this);
 
