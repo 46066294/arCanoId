@@ -21,6 +21,7 @@ class mainState extends Phaser.State {
     private win = false;
     private lose = false;
     private score = 0;
+    private textScore:Phaser.Text;
 
     preload():void {
         super.preload();
@@ -137,6 +138,14 @@ class mainState extends Phaser.State {
         this.ballLose = false;
     }
 
+    private ballBreaksBrick(pelota:Phaser.Sprite, ladrillo:Phaser.Sprite) {
+        ladrillo.kill();
+        this.score = this.score++;
+
+        this.textScore.setText("Score: " + this.score);
+
+    }
+
 
     update():void {
         super.update();
@@ -151,6 +160,22 @@ class mainState extends Phaser.State {
         else{
             this.paddleBlu.body.acceleration.x = 0;
         }
+
+        ////////////////////////////////////////////////////////////
+        //collide
+        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        this.physics.arcade.overlap(null, this.bricks, null, null, this);
+        this.physics.arcade.collide(this.ballBlue, this.bricks, this.ballBreaksBrick, null, this);
+
+
+        if (this.cursor.left.isDown) {
+            this.paddleBlu.body.acceleration.x = -this.ACCELERATION;
+        } else if (this.cursor.right.isDown) {
+            this.paddleBlu.body.acceleration.x = this.ACCELERATION / 2;
+        }
+
+        this.paddleBlu.position.x = this.game.input.x;
+        ////////////////////////////////////////////////////////////
     }
 }//end mainState class
 
