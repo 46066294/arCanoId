@@ -19,6 +19,7 @@ class mainState extends Phaser.State {
     private cursor:Phaser.CursorKeys;
     private ballLose = false;
     private win = false;
+    private lose = false;
     private score = 0;
 
     preload():void {
@@ -43,6 +44,7 @@ class mainState extends Phaser.State {
         this.createBackground();
         this.createPaddle();
         this.createBall();
+        this.buildBricks();
 
     }
 
@@ -84,12 +86,43 @@ class mainState extends Phaser.State {
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
         this.ballBlue.body.bounce.setTo(0.5);
         //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
-        this.ballBlue.events.onOutOfBounds.add(this.lose, this);
+        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
         this.ballBlue.checkWorldBounds = true;
-        this.ballBlue.events.onOutOfBounds.add(this.lose, this);
+        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
     };
 
-    private lose(ballBlue:Phaser.Sprite){
+    private buildBricks(){
+
+        var brickColumn = 13;
+        var brickRaw = 10;
+        var anchuraLadrillo = 60;
+        var alturaLadrillo = 28;
+        this.bricks = this.add.group();
+        this.bricks.enableBody = true;
+
+        var colorBrick = ['element_blue_rectangle',
+            'element_red_rectangle',
+            'element_green_rectangle',
+            'element_grey_rectangle'];
+
+        for (var cont = 0; cont < brickRaw; cont++) {
+            for (var i = 0; i < brickColumn; i++) {
+
+                var colorBarrita = colorBrick[cont % colorBrick.length];
+                var x = anchuraLadrillo * i;
+                var y = cont * (alturaLadrillo + 1);
+                var br = new Brick(this.game, x, y, colorBarrita, 0);
+
+                this.add.existing(br);
+                this.bricks.add(br);
+
+            }
+        }
+    }
+
+
+
+    private partidaPerdida(ballBlue:Phaser.Sprite){
 
         this.ballLose = true;
 
@@ -105,7 +138,6 @@ class mainState extends Phaser.State {
     }
 
 
-
     update():void {
         super.update();
 
@@ -119,6 +151,20 @@ class mainState extends Phaser.State {
         else{
             this.paddleBlu.body.acceleration.x = 0;
         }
+    }
+}//end mainState class
+
+class Brick extends Phaser.Sprite{
+
+    constructor(game:Phaser.Game,
+                x:number,
+                y:number,
+                key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture,
+                frame:string|number) {
+        super(game, x, y, key, frame);
+
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+        this.body.immovable = true;
     }
 }
 

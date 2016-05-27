@@ -15,6 +15,10 @@ var mainState = (function (_super) {
         this.MAX_SPEED = 800;
         this.ACCELERATION = 100000; // pixels/second/second
         this.DRAG = 10000;
+        this.ballLose = false;
+        this.win = false;
+        this.lose = false;
+        this.score = 0;
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
@@ -30,9 +34,11 @@ var mainState = (function (_super) {
     };
     mainState.prototype.create = function () {
         _super.prototype.create.call(this);
+        this.physics.arcade.checkCollision.down = false;
         this.createBackground();
         this.createPaddle();
         this.createBall();
+        this.buildBricks();
     };
     mainState.prototype.createBackground = function () {
         var bg = this.add.sprite(0, 0, 'background');
@@ -59,14 +65,53 @@ var mainState = (function (_super) {
         //this.ballBlue.scale.setTo(scale, scale);
         this.ballBlue.anchor.setTo(0.5, 1.8);
         //this.ballBlue.scale.setTo(0.5, 0.5);
-        this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
+        //this.physics.enable(this.ballBlue, Phaser.Physics.ARCADE);
+        this.physics.enable(this.ballBlue);
+        this.ballBlue.body.collideWorldBounds = true;
+        this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED);
+        this.ballBlue.body.velocity.x = 200;
+        this.ballBlue.body.velocity.y = 200;
         this.ballBlue.body.gr;
         this.ballBlue.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED); // x, y
-        this.ballBlue.body.collideWorldBounds = true;
         this.ballBlue.body.bounce.setTo(0.5);
-        this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
+        //this.ballBlue.body.drag.setTo(this.DRAG, this.DRAG); // x, y
+        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
+        this.ballBlue.checkWorldBounds = true;
+        this.ballBlue.events.onOutOfBounds.add(this.partidaPerdida, this);
     };
     ;
+    mainState.prototype.buildBricks = function () {
+        var brickColumn = 13;
+        var brickRaw = 10;
+        var anchuraLadrillo = 60;
+        var alturaLadrillo = 28;
+        this.bricks = this.add.group();
+        this.bricks.enableBody = true;
+        var colorBrick = ['element_blue_rectangle',
+            'element_red_rectangle',
+            'element_green_rectangle',
+            'element_grey_rectangle'];
+        for (var cont = 0; cont < brickRaw; cont++) {
+            for (var i = 0; i < brickColumn; i++) {
+                var colorBarrita = colorBrick[cont % colorBrick.length];
+                var x = anchuraLadrillo * i;
+                var y = cont * (alturaLadrillo + 1);
+                var br = new Brick(this.game, x, y, colorBarrita, 0);
+                this.add.existing(br);
+                this.bricks.add(br);
+            }
+        }
+    };
+    mainState.prototype.partidaPerdida = function (ballBlue) {
+        this.ballLose = true;
+        ballBlue.kill();
+        this.input.onTap.addOnce(this.restartGame, this);
+    };
+    mainState.prototype.restartGame = function () {
+        this.game.state.restart();
+        this.score = 0;
+        this.ballLose = false;
+    };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
         if (this.cursor.left.isDown) {
@@ -82,7 +127,16 @@ var mainState = (function (_super) {
         }
     };
     return mainState;
-})(Phaser.State);
+})(Phaser.State); //end mainState class
+var Brick = (function (_super) {
+    __extends(Brick, _super);
+    function Brick(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this.game.physics.enable(this, Phaser.Physics.ARCADE);
+        this.body.immovable = true;
+    }
+    return Brick;
+})(Phaser.Sprite);
 var SimpleGame = (function () {
     function SimpleGame() {
         this.game = new Phaser.Game(800, 600, Phaser.AUTO, 'gameDiv');
