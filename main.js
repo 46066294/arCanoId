@@ -27,6 +27,8 @@ var mainState = (function (_super) {
         this.load.image('element_green_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('element_grey_rectangle', 'items/png/element_green_rectangle.png');
         this.load.image('background', 'assets/background800x600.jpg');
+        //sonido
+        this.load.audio('soundBreak', 'sounds/Mirror Breaking-SoundBible.com-73239746.wav');
         //MOTOR DE FISICAS
         this.physics.startSystem(Phaser.Physics.ARCADE);
     };
@@ -37,6 +39,8 @@ var mainState = (function (_super) {
         this.createPaddle();
         this.createBall();
         this.buildBricks();
+        //sonido
+        this.soundBreakBrick = this.game.add.audio('soundBreak');
         //PUNTUACIO
         this.textScore = this.add.text(0, 0, 'Score: ' + this.score + '                mArcanoid v1.0', { font: "30px Arial", fill: "#ff0000" });
         this.textScore.fixedToCamera = true;
@@ -115,23 +119,45 @@ var mainState = (function (_super) {
     mainState.prototype.ballBreaksBrick = function (ballBlue, brick) {
         brick.kill();
         this.score = this.score + 100;
+        //sonido
+        this.soundBreakBrick.play();
+        //this.soundBreakBrick.stop();
         this.textScore.setText("Score: " + this.score);
+    };
+    mainState.prototype.ballHitPaddle = function (ballBlue, paddleBlu) {
+        var diff = 0;
+        if (ballBlue.x < paddleBlu.x) {
+            //  Ball is on the left-hand side of the paddle
+            diff = paddleBlu.x - ballBlue.x;
+            ballBlue.body.velocity.x = (-10 * diff);
+        }
+        else if (ballBlue.x > paddleBlu.x) {
+            //  Ball is on the right-hand side of the paddle
+            diff = ballBlue.x - paddleBlu.x;
+            ballBlue.body.velocity.x = (10 * diff);
+        }
+        else {
+            //  Ball is perfectly in the middle
+            //  Add a little random X to stop it bouncing straight up!
+            ballBlue.body.velocity.x = 2 + Math.random() * 8;
+        }
     };
     mainState.prototype.update = function () {
         _super.prototype.update.call(this);
-        if (this.cursor.left.isDown) {
-            //this.ufo.x -= 5;
-            this.paddleBlu.body.acceleration.x = -this.ACCELERATION;
-        }
-        else if (this.cursor.right.isDown) {
-            //this.ufo.x += 5;
-            this.paddleBlu.body.acceleration.x = this.ACCELERATION;
-        }
-        else {
-            this.paddleBlu.body.acceleration.x = 0;
-        }
+        /*
+                if(this.cursor.left.isDown){
+                    //this.ufo.x -= 5;
+                    this.paddleBlu.body.acceleration.x = -this.ACCELERATION;
+                    //ballBlue.body.moveLeft(200);
+                } else if(this.cursor.right.isDown){
+                    //this.ufo.x += 5;
+                    this.paddleBlu.body.acceleration.x = this.ACCELERATION;
+                }
+                else{
+                    this.paddleBlu.body.acceleration.x = 0;
+                }*/
         //collide:   http://phaser.io/docs/2.4.4/Phaser.Physics.Arcade.html#collide
-        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, null, null, this);
+        this.physics.arcade.collide(this.paddleBlu, this.ballBlue, this.ballHitPaddle, null, this);
         this.physics.arcade.collide(this.ballBlue, this.bricks, this.ballBreaksBrick, null, this);
         this.paddleBlu.position.x = this.game.input.x;
     };
